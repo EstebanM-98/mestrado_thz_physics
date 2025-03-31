@@ -118,13 +118,13 @@ def fit_complex_drude(x,y,p0=[]):
     #lim_inf = [0, 0, 0, 0.00000, 0.00000, 0.00000] # 0.77868 # 0.06% -> 0.54868[::-1] # 0.10% -> 0.28562
     #lim_sup = [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf] # 1.29225
 
-    bounds = ([0, 0, 0.2,0,0,0], [100, 100, 1.2, 3,np.inf,3])
+    bounds = ([0, 0, 0.4, 0, 0, 0], [np.inf, np.inf, 2, np.inf, np.inf,np.inf])
     if not p0 :
-        poptBoth, pcovBoth = curve_fit(epsilonboth_drude, np.hstack([x, x]), yBoth,bounds=bounds,maxfev=5000)
+        poptBoth, pcovBoth = curve_fit(epsilonboth_drude, np.hstack([x, x]), yBoth,bounds=bounds,maxfev=20000)
         return poptBoth
 
     else:
-        poptBoth, pcovBoth = curve_fit(epsilonboth_drude, np.hstack([x, x]), yBoth,p0=p0,bounds=bounds,maxfev=10000)
+        poptBoth, pcovBoth = curve_fit(epsilonboth_drude, np.hstack([x, x]), yBoth,p0=p0,bounds=bounds,maxfev=20000)
         return poptBoth
 
 def fit_complex(x,y,p0):
@@ -135,13 +135,14 @@ def fit_complex(x,y,p0):
     yBoth = np.hstack([yReal, yImag])
     #lim_inf = [0, 0, 0, 0.00000, 0.00000, 0.00000] # 0.77868 # 0.06% -> 0.54868[::-1] # 0.10% -> 0.28562
     #lim_sup = [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf] # 1.29225
-    bounds = ([0, 0, 0.2,0], [100, 100, 1.2, 3])
+    bounds = ([0, 0, 0.2,0], [np.inf, np.inf, 2, np.inf])
     if not p0 :
-        poptBoth, pcovBoth = curve_fit(epsilonboth, np.hstack([x, x]), yBoth,bounds=bounds,maxfev=5000)
+  
+        poptBoth, pcovBoth = curve_fit(epsilonboth, np.hstack([x, x]), yBoth,bounds=bounds,maxfev=10000)
         return poptBoth
 
     else:
-        poptBoth, pcovBoth = curve_fit(epsilonboth, np.hstack([x, x]), yBoth,maxfev=5000)
+        poptBoth, pcovBoth = curve_fit(epsilonboth, np.hstack([x, x]), yBoth,maxfev=10000)
         return poptBoth
 
 # def FourierT(f,N):
@@ -239,7 +240,7 @@ def convert_dats(carpeta,N):
             archivo_salida = os.path.join(nueva_carpeta, f'Average_{round(mean_temp,2)}K.dat')
             df_promedio.to_csv(archivo_salida, index=False, sep=' ')
             print(f"Archivo {archivo_salida} generado en {nueva_carpeta}.")
-        
+
         except Exception as e:
             print(f"Error al procesar los archivos con temperatura {round(mean_temp,2)}: {e}")
 
@@ -269,14 +270,16 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
     path_ref: string
     left:float
     '''
+    y = getSignal(path_signal,right_signal,left)
+    y_substrate = getSignal(path_ref,right_subs,left)
+
     if not params_window :
         # Cuando no se usara ventana.
+        
         return y,y_substrate
     else:
         # Obtencion de la señal que pasa por el film.
-        y = getSignal(path_signal,right_signal,left)
         # Obtención del substrato.
-        y_substrate = getSignal(path_ref,right_subs,left)
         #PROPIEDADES DE LAS SEÑALES.
         idx_max_signal = np.argmax(y)
         idx_max_substrate = np.argmax(y_substrate)
@@ -300,7 +303,7 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
         ventana = apply_window(params_window)
         idx_max_window = np.argmax(ventana)
         desp_hacia_ventana = idx_max_window - idx_max_signal
-        # MOVIENDO TANTO LA SEÑAL COMO 
+        # MOVIENDO TANTO LA SEÑAL COMO EL SUBSTRATO HACIA EL MAXIMO DE LA VENTANA
         y_desplazada_max = np.roll(y,desp_hacia_ventana)
         y_substrate_padding_max = np.roll(y_substrate_padding,desp_hacia_ventana)
 
