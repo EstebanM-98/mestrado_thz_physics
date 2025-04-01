@@ -284,48 +284,25 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
 
         # Considerando el caso donde el substrato tiene mas punto sque la señal.
 
-        # idx_max_signal = np.argmax(y)
-        # idx_max_substrate = np.argmax(y_substrate)
+        idx_max_signal = np.argmax(y)
+        idx_max_substrate = np.argmax(y_substrate)
         len_y = len(y)
         len_y_substrate = len(y_substrate)
-        diferencia = len_y - len_y_substrate 
-
+        #Phase
+        desplazamiento_signal = idx_max_signal - idx_max_substrate
+        #Desplazando substrato hacia la señal.
+        y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
+        diferencia = abs(len_y - len_y_substrate) 
         if diferencia==0:
 
-            idx_max_signal = np.argmax(y)
-            idx_max_substrate = np.argmax(y_substrate)
-            #Desplazando substrato hacia la señal.
-            #Phase
-            desplazamiento_signal = idx_max_signal - idx_max_substrate
-            y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
             y_substrate_padding = y_substrate_desplazada
 
-        elif diferencia>0:
-           #Añadiendo zeros a la derecha del substrato 
-            #print(np.pad(y_substrate,(0, diferencia), 'constant', constant_values=0))
-            y_substrate = pd.Series(np.pad(y_substrate,(0, diferencia), 'constant', constant_values=0))
-            idx_max_signal = np.argmax(y)
-            idx_max_substrate = np.argmax(y_substrate)
-            #Desplazando substrato hacia la señal.
-            #Phase
-            desplazamiento_signal = idx_max_signal - idx_max_substrate
-            y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
-            y_substrate_padding = y_substrate_desplazada
+        else:
 
-        elif diferencia<0:
-            #Añadiendo zeros a la derecha de la señal
-            y = pd.Series(np.pad(y, (0, abs(diferencia)), 'constant', constant_values=0))
-            idx_max_signal = np.argmax(y)
-            idx_max_substrate = np.argmax(y_substrate)
-            #Desplazando substrato hacia la señal.
-            #Phase
-            desplazamiento_signal = idx_max_signal - idx_max_substrate
-            y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
-            y_substrate_padding = y_substrate
-
+            y_substrate_padding = pd.Series(np.pad(y_substrate_desplazada, (0, diferencia), 'constant', constant_values=0))
 
         #DEFINIENDO PARAMETROS DE LA VENTANA
-        params_window.insert(1,len(y))
+        params_window.insert(1,len_y)
         ventana = apply_window(params_window)
         idx_max_window = np.argmax(ventana)
         desp_hacia_ventana = idx_max_window - idx_max_signal
