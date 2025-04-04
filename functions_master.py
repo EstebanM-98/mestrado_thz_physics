@@ -297,7 +297,7 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
             #Desplazando substrato hacia la señal.
             #Phase
             desplazamiento_signal = idx_max_signal - idx_max_substrate
-            y_substrate_de  splazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
+            y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
             y_substrate_padding = y_substrate_desplazada
 
         elif diferencia>0:
@@ -309,6 +309,7 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
             #Desplazando substrato hacia la señal.
             #Phase
             desplazamiento_signal = idx_max_signal - idx_max_substrate
+            print(desplazamiento_signal)
             y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
             y_substrate_padding = y_substrate_desplazada
 
@@ -320,6 +321,7 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
             #Desplazando substrato hacia la señal.
             #Phase
             desplazamiento_signal = idx_max_signal - idx_max_substrate
+            print(desplazamiento_signal)
             y_substrate_desplazada = pd.Series(np.roll(y_substrate, desplazamiento_signal))
             y_substrate_padding = y_substrate
 
