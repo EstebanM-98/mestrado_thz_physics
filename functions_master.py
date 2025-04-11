@@ -249,6 +249,7 @@ def getFilterdata(path_signal,right,left):
 
     df1 = pd.read_csv(path_signal, delim_whitespace=True)
     df1 = df1.loc[(df1.iloc[:, 0] >= left) & (df1.iloc[:, 0] <=right)]
+    
     return df1['pos'] ,df1['X']
 
 
