@@ -271,6 +271,7 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
     path_ref: string
     left:float
     '''
+    
     y = getSignal(path_signal,right_signal,left)
     y_substrate = getSignal(path_ref,right_subs,left)
 
@@ -278,6 +279,7 @@ def getSignalWindowed(path_signal,path_ref,left,right_signal,right_subs,params_w
         # Cuando no se usara ventana.
         
         return y,y_substrate
+    
     else:
         # Obtencion de la señal que pasa por el film.
         # Obtención del substrato.
