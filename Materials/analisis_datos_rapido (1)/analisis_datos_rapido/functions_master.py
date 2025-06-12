@@ -230,7 +230,7 @@ def convert_dats(carpeta,N):
                     suma_col2 += df['X']
             
             # Calcular el promedio
-            promedio_col1 = suma_col1 / n_archivos * (2/c)
+            promedio_col1 = suma_col1 / n_archivos #* (2/c)
             promedio_col2 = suma_col2 / n_archivos
             
             # Crear un DataFrame con los promedios
