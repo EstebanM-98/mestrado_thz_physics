@@ -319,6 +319,8 @@ def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, par
     ventana_alineada = np.roll(ventana, desp_ventana)
 
     return desplazamiento, y_alineada, y_substrate, ventana_alineada
+
+
     
 
 def trans_model(nu,b,a,x0,gamma):
