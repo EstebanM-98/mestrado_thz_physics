@@ -397,3 +397,33 @@ def extrac_data_time(path_air):
     suma_col2 = df1['X'].values
    
     return suma_col1, suma_col2
+
+
+
+def FourierT2(f,N):
+    return np.conj(sp.fft.fft(f.values,n=N))
+
+def calcular_n(omega, phi_exp, c, d):
+
+    return 1 + (c / (omega * d)) * phi_exp
+
+def calcular_kappa(omega, T_exp, n, c, d):
+
+    term = ((n + 1)**2 / (4 * n)) * T_exp
+    return -(c / (omega * d)) * np.log(term)
+
+
+def extraer_angulos(nombres_archivos):
+    """
+    Extrae el patrón que está después del último '__' y antes de '.dat'
+    Ejemplo: '...__hori-80deg.dat' → 'hori-80deg'
+    """
+    patrones = []
+    patron_regex = re.compile(r'__([^__]+)\.dat$')  # Captura lo entre último __ y .dat
+    
+    for nombre in nombres_archivos:
+        coincidencia = patron_regex.search(nombre)
+        if coincidencia:
+            patrones.append(coincidencia.group(1))
+    
+    return patrones
