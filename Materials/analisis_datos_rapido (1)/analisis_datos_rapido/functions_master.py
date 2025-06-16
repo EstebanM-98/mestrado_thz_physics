@@ -55,7 +55,9 @@ def apply_window(params):
     except TypeError as e:
         raise ValueError(f"Error al pasar los parámetros a la ventana: {e}")
 
-    
+def FourierT2(f,N):
+    return np.conj(sp.fft.fft(f.values,n=N))
+
 def FourierT(f,N):
     return (sp.fft.fft(f,n=N))
 
