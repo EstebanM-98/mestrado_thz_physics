@@ -55,9 +55,7 @@ def apply_window(params):
     except TypeError as e:
         raise ValueError(f"Error al pasar los parámetros a la ventana: {e}")
 
-def FourierT2(f,N):
-    return np.conj(sp.fft.fft(f.values,n=N))
-
+    
 def FourierT(f,N):
     return (sp.fft.fft(f,n=N))
 
@@ -171,8 +169,11 @@ def generar_rangos(min_temp, max_temp, paso):
             rangos.append((i, i + paso))
         return rangos
 
-# Función para procesar archivos .dat
-def convert_dats(carpeta,N):
+def FourierT2(f,N):
+    return np.conj(sp.fft.fft(f.values,n=N))
+
+
+def convert_dats(carpeta, N):
     nueva_carpeta = os.path.join(carpeta, 'carpeta1')
     os.makedirs(nueva_carpeta, exist_ok=True)
     
@@ -191,7 +192,7 @@ def convert_dats(carpeta,N):
     if not temperaturas:
         print("No se encontraron temperaturas en los archivos.")
         return
-    
+
     archivos_por_temp = dict(sorted(archivos_por_temp.items()))
     #FIN AGRUPACION ARCHIVOS POR TEMP
     
@@ -204,12 +205,11 @@ def convert_dats(carpeta,N):
     if rangos_temperatura is None:
         archivos_por_rango = archivos_por_temp
     else: 
-    # Agrupar archivos por rango de temperatura
+        # Agrupar archivos por rango de temperatura
         archivos_por_rango = agrupar_por_rango_temperatura(archivos_por_temp, rangos_temperatura)
-
-
     # Procesar archivos por cada temperatura
     for rango, lista_archivos in archivos_por_rango.items():
+        mean_temp = None  # Inicializar la variable antes del try
         try:
             # Inicializar variables de acumulación
             suma_col1 = None
@@ -222,7 +222,6 @@ def convert_dats(carpeta,N):
             for archivo in lista_archivos:
                 temps_arch.append(extraer_temperatura(archivo))
                 df = pd.read_csv(os.path.join(carpeta, archivo), delim_whitespace=True)
-                
                 # Acumular las columnas
                 if suma_col1 is None:
                     suma_col1 = df['pos']
@@ -238,13 +237,16 @@ def convert_dats(carpeta,N):
             # Crear un DataFrame con los promedios
             df_promedio = pd.DataFrame({'pos': promedio_col1, 'X': promedio_col2})
             mean_temp = (max(temps_arch)+min(temps_arch))/2
+            
             # Guardar el archivo resultante en la nueva carpeta
             archivo_salida = os.path.join(nueva_carpeta, f'Average_{round(mean_temp,2)}K.dat')
             df_promedio.to_csv(archivo_salida, index=False, sep=' ')
             print(f"Archivo {archivo_salida} generado en {nueva_carpeta}.")
 
         except Exception as e:
-            print(f"Error al procesar los archivos con temperatura {round(mean_temp,2)}: {e}")
+            # Usar un mensaje genérico si mean_temp no está definido
+            temp_msg = round(mean_temp, 2) if mean_temp is not None else "desconocida"
+            print(f"Error al procesar los archivos con temperatura {temp_msg}: {e}")
 
 
 def getFilterdata(path_signal,right,left):
@@ -321,8 +323,6 @@ def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, par
     ventana_alineada = np.roll(ventana, desp_ventana)
 
     return desplazamiento, y_alineada, y_substrate, ventana_alineada
-
-
     
 
 def trans_model(nu,b,a,x0,gamma):
@@ -399,33 +399,3 @@ def extrac_data_time(path_air):
     suma_col2 = df1['X'].values
    
     return suma_col1, suma_col2
-
-
-
-def FourierT2(f,N):
-    return np.conj(sp.fft.fft(f.values,n=N))
-
-def calcular_n(omega, phi_exp, c, d):
-
-    return 1 + (c / (omega * d)) * phi_exp
-
-def calcular_kappa(omega, T_exp, n, c, d):
-
-    term = ((n + 1)**2 / (4 * n)) * T_exp
-    return -(c / (omega * d)) * np.log(term)
-
-
-def extraer_angulos(nombres_archivos):
-    """
-    Extrae el patrón que está después del último '__' y antes de '.dat'
-    Ejemplo: '...__hori-80deg.dat' → 'hori-80deg'
-    """
-    patrones = []
-    patron_regex = re.compile(r'__([^__]+)\.dat$')  # Captura lo entre último __ y .dat
-    
-    for nombre in nombres_archivos:
-        coincidencia = patron_regex.search(nombre)
-        if coincidencia:
-            patrones.append(coincidencia.group(1))
-    
-    return patrones

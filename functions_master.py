@@ -175,7 +175,7 @@ def convert_dats(carpeta,N):
     os.makedirs(nueva_carpeta, exist_ok=True)
     
     archivos = [archivo for archivo in os.listdir(carpeta) if archivo.endswith('.dat')]
-    
+    print(archivos)
     # Agrupar archivos por temperatura
     archivos_por_temp = {}
     temperaturas = []
