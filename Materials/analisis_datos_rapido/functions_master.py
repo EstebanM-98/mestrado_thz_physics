@@ -263,7 +263,13 @@ def getSignal(path_signal,right,left):
     df1 = df1.loc[(df1.iloc[:, 0] >= left) & (df1.iloc[:, 0] <=right)]
     return df1['X']
 
-def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, params_window=None):
+def getSignalWindowed(path_signal, 
+                      path_ref, 
+                      left, 
+                      right_signal,
+                        right_subs, 
+                        params_window=None,
+                        zeros_to_add = 2**12):
     '''
     Alinea la señal al máximo del substrato y aplica una ventana centrada en ese máximo.
 
@@ -316,6 +322,14 @@ def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, par
     params_window_copia = list(params_window)
     params_window_copia.insert(1, len(y))  # insertar tamaño de la señal
     ventana = apply_window(params_window_copia)
+
+    # Añadir 64 ceros a la izquierda de las señales
+    zeros_to_add = 2**12
+    y_alineada = np.pad(y_alineada, (zeros_to_add, 0), 'constant')
+    y_substrate = np.pad(y_substrate, (zeros_to_add, 0), 'constant')
+    
+    # Actualizar posición del máximo del substrato (ahora desplazado por los ceros añadidos)
+    idx_max_subs += zeros_to_add
 
     # Desplazar ventana para que su máximo coincida con el máximo común
     idx_max_ventana = np.argmax(ventana)

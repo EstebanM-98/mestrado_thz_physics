@@ -259,7 +259,12 @@ def getSignal(path_signal,right,left):
     df1 = df1.loc[(df1.iloc[:, 0] >= left) & (df1.iloc[:, 0] <=right)]
     return df1['X']
 
-def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, params_window=None):
+def getSignalWindowed(path_signal, 
+                     path_ref, 
+                     left, 
+                     right_signal,
+                     right_subs, 
+                     params_window=None):
     '''
     Alinea la señal al máximo del substrato y aplica una ventana centrada en ese máximo.
 
@@ -289,11 +294,31 @@ def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, par
 
     y = np.asarray(y)
     y_substrate = np.asarray(y_substrate)
+    idx_max_y = np.argmax(y)
+    idx_max_subs = np.argmax(y_substrate)
+    desplazamiento = idx_max_subs - idx_max_y
+
+    # Función para balancear puntos izquierda/derecha del máximo
+    def balance_signal(signal):
+        idx_max = np.argmax(signal)
+        left_points = idx_max  # Puntos desde inicio hasta máximo
+        right_points = len(signal) - idx_max - 1  # Puntos desde máximo hasta final
+        
+        # Si hay más puntos a la derecha, rellenar con ceros a la izquierda
+        if right_points > left_points:
+            pad_size = right_points - left_points
+            signal = np.pad(signal, (pad_size, 0), 'constant')
+        
+        return signal
+
+    # Balancear ambas señales individualmente
+    y = balance_signal(y)
+    y_substrate = balance_signal(y_substrate)
 
     if not params_window:
         return y, y_substrate
 
-    # Asegurar mismos tamaños
+    # Asegurar mismos tamaños (por si hay diferencias residuales)
     len_diff = len(y) - len(y_substrate)
     if len_diff > 0:
         y_substrate = np.pad(y_substrate, (0, len_diff), 'constant')
@@ -310,7 +335,7 @@ def getSignalWindowed(path_signal, path_ref, left, right_signal, right_subs, par
 
     # Aplicar ventana
     params_window_copia = list(params_window)
-    params_window_copia.insert(1, len(y))  # insertar tamaño de la señal
+    params_window_copia.insert(1, len(y_substrate))  # insertar tamaño de la señal
     ventana = apply_window(params_window_copia)
 
     # Desplazar ventana para que su máximo coincida con el máximo común
