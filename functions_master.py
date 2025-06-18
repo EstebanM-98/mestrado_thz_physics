@@ -160,6 +160,9 @@ def agrupar_por_rango_temperatura(archivos_por_temp, rangos):
     
     return archivos_por_rango
 
+def FourierT2(f,N):
+    return np.conj(sp.fft.fft(f.values,n=N))
+
 def generar_rangos(min_temp, max_temp, paso):
     rangos = []
     if paso == 0:
@@ -291,13 +294,10 @@ def getSignalWindowed(path_signal,
     '''
     y = getSignal(path_signal, right_signal, left)
     y_substrate = getSignal(path_ref, right_subs, left)
-
+    # print(f"Señal: {len(y)} puntos, Substrato: {len(y_substrate)} puntos")
     y = np.asarray(y)
     y_substrate = np.asarray(y_substrate)
-    idx_max_y = np.argmax(y)
-    idx_max_subs = np.argmax(y_substrate)
-    desplazamiento = idx_max_subs - idx_max_y
-
+    
     # Función para balancear puntos izquierda/derecha del máximo
     def balance_signal(signal):
         idx_max = np.argmax(signal)
@@ -314,6 +314,7 @@ def getSignalWindowed(path_signal,
     # Balancear ambas señales individualmente
     y = balance_signal(y)
     y_substrate = balance_signal(y_substrate)
+    
 
     if not params_window:
         return y, y_substrate
@@ -331,6 +332,7 @@ def getSignalWindowed(path_signal,
 
     # Desplazar y para alinear su máximo al del substrato
     desplazamiento = idx_max_subs - idx_max_y
+    
     y_alineada = np.roll(y, desplazamiento)
 
     # Aplicar ventana
