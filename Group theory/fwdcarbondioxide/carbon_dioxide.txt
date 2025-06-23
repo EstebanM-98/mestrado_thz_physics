@@ -1,0 +1,11 @@
+%nproc=12
+# OPT FREQ B3LYP 6-311+G(2d,p)
+
+Carbon dioxide
+
+0 1
+ C                 0.0   0.0  0.0
+ O                -1.1604   0.0 0.0
+ O                 1.1604   0.0 0.0
+                 
+
