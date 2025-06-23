@@ -297,6 +297,13 @@ def getSignalWindowed(path_signal,
     # print(f"Señal: {len(y)} puntos, Substrato: {len(y_substrate)} puntos")
     y = np.asarray(y)
     y_substrate = np.asarray(y_substrate)
+
+    # Encontrar máximos
+    idx_max_y = np.argmax(y)
+    idx_max_subs = np.argmax(y_substrate)
+
+    # Desplazar y para alinear su máximo al del substrato
+    desplazamiento = idx_max_subs - idx_max_y
     
     # Función para balancear puntos izquierda/derecha del máximo
     def balance_signal(signal):
@@ -322,16 +329,16 @@ def getSignalWindowed(path_signal,
     # Asegurar mismos tamaños (por si hay diferencias residuales)
     len_diff = len(y) - len(y_substrate)
     if len_diff > 0:
-        y_substrate = np.pad(y_substrate, (0, len_diff), 'constant')
+        y_substrate = np.pad(y_substrate, (len_diff, 0), 'constant')
     elif len_diff < 0:
-        y = np.pad(y, (0, -len_diff), 'constant')
+        y = np.pad(y, (-len_diff, 0), 'constant')
 
-    # Encontrar máximos
-    idx_max_y = np.argmax(y)
+    # # Encontrar máximos
+    # idx_max_y = np.argmax(y)
     idx_max_subs = np.argmax(y_substrate)
 
-    # Desplazar y para alinear su máximo al del substrato
-    desplazamiento = idx_max_subs - idx_max_y
+    # # Desplazar y para alinear su máximo al del substrato
+    # desplazamiento = idx_max_subs - idx_max_y
     
     y_alineada = np.roll(y, desplazamiento)
 
