@@ -1,0 +1,249 @@
+\documentclass[a4paper,12pt,oneside]{article}
+\usepackage[brazil, english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage[a4paper,top=3.5cm,left=3cm,right=3cm,bottom=2.5cm]{geometry}
+\usepackage{times}
+\usepackage[style=numeric,backend=biber,sorting=none]{biblatex}
+\usepackage{ragged2e} % Adicionando o pacote para justificação
+% Configuração do sistema de citação (pode ser alterado conforme necessário)
+\addbibresource{referencias.bib}
+\usepackage{hyperref}
+% Configuração da cor dos hiperlinks
+\hypersetup{
+    colorlinks=true,
+    allcolors=blue  % Cor padrão para todos os tipos de links
+}
+\usepackage{xcolor}
+\usepackage{booktabs}
+% ---
+% Pacotes de citações
+% ---
+% Página de Rosto (folha de rosto)
+% ******************************************************************************
+% ********************** MODELO DE FOLHA DE ROSTO - IFUSP **********************
+% ******************************************************************************
+% ******************************************************************************
+%Alguns editores de LATEX podem ter problemas em compilar arquivos com nomes que estejam em outros idiomas %diferentes do %inglÃªs e tenham caracteres especiais, como "Ã§" e a "~". Neste caso, renomeie os arquivos sem os %caracteres.
+%\Some LATEX editors may present problems to compile files whose names are in other languages and have special %characters, %like "Ã§" and "~". In this case, rename the files without the characters.
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%ConfiguraÃ§Ã§Ãµes de pÃ¡gina e pacotes utilizados pelo template \ Page setup and packages used by the template
+\begin{document}
+
+\pagestyle{empty}
+\begin{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%\TÃtulo da Tese \ Thesis title
+	{\fontsize{16}{16} \selectfont Universidade de S\~ao Paulo \\}
+	\vspace{0.1cm}
+	{\fontsize{16}{16} \selectfont Instituto de F\'{i}sica}
+    \vspace{3.3cm}
+
+	{\fontsize{22}{22}\selectfont Fônons de terahertz em materiais quânticos\par}
+    \vspace{2cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%\Nome do Autor \ Author's name
+
+    {\fontsize{18}{18}\selectfont Eduardo Destefani Stefanato\par}
+
+    \vspace{2cm}
+
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%\Orientador e coorientador (se existir) \ Supervisor and co-supervisor (if there is one)
+\leftskip 6cm
+\begin{flushright}	
+\leftskip 6cm
+Orientador: Prof. Dr. Felix G. G. Hernandez{ \hskip 5cm  } 
+\leftskip 6cm
+%Se nÃ£o houve coorientador, comente a linha abaixo \ If there is no co-advisor, comment line below
+%Coorientador(a): Prof.(a) Dr.(a)  \underline{ \hskip 5cm  } 
+\end{flushright}	
+
+    \vspace{0.8cm}    
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+% Grau AcadÃªmico \ Degree
+
+\par
+\leftskip 6cm
+\noindent {Relatório de mestrado apresentada ao Instituto de Física da Universidade de São Paulo, como requisito parcial para a obtenção do título de Mestre em Ciências.}
+\par
+\leftskip 0cm
+\vskip 2cm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+% Banca Examinadora -- Primeiro nome Ã© do presidente ou do presidente da banca \ Examining committee -- The first name must be the supervisor's name or the examination committee president's name.
+
+\noindent  \\
+\noindent  \\
+\vspace{2.8cm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%Data \ Date
+\centering
+    {São Paulo - SP\\  2023}
+\clearpage
+
+\justify % Configurando justificação global
+
+% Resumo em Português
+\selectlanguage{brazil}
+\begin{abstract}
+\noindent Fônons, excitações coletivas de uma rede cristalina, determinam muitas das propriedades físicas dos sólidos, incluindo elétricas, térmicas e ópticas. Excitando ou controlando modos particulares de fônons, podem-se modificar propriedades do material
+ou até induzir efeitos quânticos tais como supercondutividade. Neste projeto, planeja-se estudar fônons através da espectroscopia de terahertz no domínio do tempo em materiais quânticos. Ou seja, materiais que apresentam fortes correlações e interações entre os
+vários graus de liberdade (carga, spin, orbital e dinâmica da rede cristalina) e que levam a fenômenos exóticos e novas transições de fase. Em particular, pretende-se investigar a polarização e o acoplamento destes fônons ópticos com fótons de terahertz em filmes nanoestruturados de PbSnTe. O presente relatório apresenta um resumo das atividades realizadas durante o primeiro e segundo semestre do projeto de mestrado. \\
+
+\noindent \textbf{Palavras-chave:}  fônons, materiais quânticos, espectroscopia de terahertz no domínio do tempo.
+\end{abstract}
+
+
+% Resumo em Inglês
+\selectlanguage{english}
+\begin{abstract}
+\noindent Phonons, the collective excitations of a crystalline lattice, determine many of the physical properties of solids, including electrical, thermal and optical. By exciting or controlling particular modes of phonons, you can modify material properties or even induce quantum effects such as superconductivity. In this project, we plan to study phonons using terahertz spectroscopy in the time domain in quantum materials. In other words, materials that show strong correlations and interactions between the various degrees of freedom (charge, spin, orbital and crystal lattice dynamics) and which lead to exotic phenomena and new phase transitions. In particular, we intend to investigate the polarization and coupling of these optical phonons with terahertz photons in nanostructured PbSnTe films. This report presents a summary of the activities carried out during the first and second semester of the master's project. \\
+
+\noindent \textbf{Keywords:} phonons, quantum materials, terahertz spectroscopy in the time domain.
+\end{abstract}
+\selectlanguage{brazil} % Voltando para o idioma português
+
+\clearpage
+
+% Conteúdo do Documento
+\pagestyle{plain} % ou \pagestyle{headings}, dependendo do estilo desejado
+
+\section{Realizações no período}
+
+\qquad Ao longo dos últimos dois semestres do programa de mestrado em Física, minha jornada acadêmica tem sido marcada por uma imersão profunda em diversas áreas da física teórica e experimental. Este relatório visa sintetizar e refletir sobre as atividades desenvolvidas durante esse período, destacando os principais desafios, conquistas e aprendizados adquiridos.
+
+\subsection{Primeiro semestre}
+\qquad No primeiro semestre, meu foco concentrou-se na exploração de disciplinas que abordam conceitos avançados em física quântica e tratamento estatístico. As aulas proporcionaram uma base sólida para a compreensão das teorias fundamentais que permeiam a física moderna, enquanto os seminários e discussões em grupo estimularam o pensamento crítico e a habilidade de relacionar teoria e experimentação. 
+
+As disciplinas cursadas no primeiro semestre foram Mecânica Quântica I (PGF5001-17/7) e Tópicos Avançados em
+Tratamento Estatístico de Dados em Física Experimental (PGF5103-8/1), nas quais obtive o conceito A em ambas. Além das disciplinas, pude atuar como monitor de Física Experimental V (4302313) ministrada pelo Prof. Dr. Felix G. G. Hernandez. Fui encarregado de realizar as aulas e corrigir os relatórios do experimento do efeito fotoelétrico.
+
+Simultaneamente, tentei participar ativamente do grupo de pesquisa, envolvendo-me em projetos que exploram a instrumentação utilizada no laboratório nos experimentos de espectroscopia terahertz no domínio do tempo (THz-TDS, do inglês \textit{Terahertz Time Domain Spectroscopy}). Essa experiência prática proporcionou uma visão valiosa sobre a aplicação dos conceitos teóricos em contextos experimentais. 
+
+Nesse contexto, foi possível desenvolver um pequeno trabalho para apresentação de pôster no evento internacional que ocorreu na Universidade de São Paulo. O trabalho possui como título \href{https://indico.cern.ch/event/1221962/timetable/#115-frequency-selection-techni}{\textit{"Frequency Selection Techniques in Terahertz Spectroscopy and Focus Diameter Estimation"}}, apresentado na \textit{7th edition of the cross-disciplinary International Summer School INFIERI series} e foi um dos \href{https://portal.if.usp.br/imprensa/pt-br/node/4391}{destaques} da seção de posters.
+
+O semestre terminou com boas notícias, o trabalho que desenvolvi pouco antes de ingressar no mestrado foi finalmente publicado em julho de 2023. O artigo \href{https://lajc.epn.edu.ec/index.php/LAJC/article/view/361}{\textit{Segmentation of Lung Tomographic Images Using U-Net Deep Neural Networks}} foi um ponta-pé inicial na minha carreira acadêmica, logo, espero repetir o feito nos próximos períodos através dos resultados que irei obter no mestrado.
+
+\subsection{Segundo semestre}
+\qquad No segundo semestre, as atividades se diversificaram com a inserção em disciplinas mais especializadas, permitindo-me aprofundar meu conhecimento em áreas específicas de interesse. Optei por realizar os cursos de Introdução à Espectroscopia Óptica (PGF5377-1/3), no qual complementou minhas atividades iniciais no laboratório, e Práticas Pedagógicas de Ensino (PGF5007-4/6). As disciplinas contaram com a elaboração de seminários, que não apenas aprimoraram minhas habilidades de comunicação científica, mas também proporcionaram a oportunidade de receber \textit{feedbacks} valiosos de colegas e professores. Obtive conceito A nas duas disciplinas.
+
+Além disso, a participação em conferências e \textit{workshops} proporcionou uma visão mais ampla das tendências e avanços recentes no campo da física. Nesse contexto, pude participar de outro evento, no qual apresentei um pôster semelhante ao do INFIERI no início do segundo semestre. O terceiro Workshop de Física Experimental da Unifei (III WFEU)  ocorreu no Insituto de Física e Química da Universidade Federal de Itajubá nos dias 16 e 17 de novembro. O evento contou com várias palestras e uma seção de pôsters, onde apresentei o trabalho intitulado \href{https://sites.google.com/unifei.edu.br/iii-wfeu/resumos-posterspalestras/resumo-posters?authuser=0}{"Técnicas para Estimar o Diâmetro do Foco na Espectroscopia de Terahertz para Medições de Referência"}.
+
+O segundo semestre foi marcado pela participação no laboratório e reuniões do grupo de pesquisa, onde foram feitas várias medidas com amostras conhecidas na literatura. As experimentações foram cruciais para o aprendizado das metodologias para detectar e analisar os sinais obtidos pelo setup experimental de THz-TDS. Dentre as competências adquiridas durante esse processo, destacam-se a autonomia para se operar o setup e o tratamento de dados das amostras. Além das atividades no Laboratório de pesquisa em THz, fui monitor de Física Experimental IV, onde realizei o acompanhamento de 4 experimentos de óptica para as turmas.
+
+
+\section{Resultados parciais obtidos}
+\qquad A seção de resultados deste relatório representa o ponto culminante de esforços intensivos dedicados ao longo dos dois semestres do programa de mestrado em Física. Aqui, apresentarei os frutos colhidos nas diversas frentes de pesquisa e aprendizado, destacando descobertas teóricas, avanços experimentais e contribuições para o grupo de pesquisa. A análise crítica desses resultados não apenas valida as abordagens adotadas, mas também desenvolve futuras investigações e contribuições.
+
+\subsection{Contribuições para o Grupo de Pesquisa}
+\qquad Uma das contribuições para o Grupo de Pesquisa em Ciencias, Tecnologia e Inovação em Terahertz (GCTI-THz) foram os novos alunos de Iniciação Cientifica, bem como a formalização da equipe. A nova chegada de membros trouxe mais reuniões e diversas atividades no laboratório, dessa forma, pude acompanhar as experimentações e auxiliar nas tarefas delegadas a cada integrante. 
+
+Outra contribuição foi no desenvolvimento da identidade visual do grupo, ajudando a produzir uma logo que está sendo utilizada atualmente na \href{https://portal.if.usp.br/terahertz/node/323}{página oficial do laboratório}. Além disso, com a devida tutoria do pós-doc do grupo, confeccionei um manual (Anexo 1) para a operação do setup experimental, o objetivo disso é levar mais autonomia para os usuários do laboratório. 
+
+\subsection{Espectroscopias realizadas}
+\qquad Esta seção apresenta as principais análises que ocorreram ao longo dos semestres, ao todo foram 5 tipos de amostras e 2 caracterizações de componentes no setup experimental (antenas e porta amostras). Os dados foram cruciais para o desenvolvimento das análises que são rotina nos experimentos realizados. O domínio dos métodos já utilizados em trabalhos anteriores de membros do grupo \cite{Nicolas2023} permitirá que o projeto se conclua de forma mais eficiente. 
+
+As figuras a seguir representam análises preliminares das amostras obtidas até então, muitos dos resultados já foram debatidos em reuniões do grupo, logo, alguns foram descontinuados ou serão revisitados na dissertação final. Uma das primeiras amostras testadas foi um \textit{bulk} (pequeno volume) de Arseneto de Gálio (GaAs) com aproximadamente 0.452 mm de espessura. A Figura 1 exibe as propriedades ópticas levantadas, vale ressaltar que toda os métodos foram baseados em trabalhos anteriores, como a tese de doutorado recém publicada do Dr. Nícolas M. Kawahala. A \textit{Fast Furier Transform} (FFT) dos sinais permite investigar a banda de frequência útil do setup e é utilizada em todas as análises do THz-TDS, permitindo obter propriedades optoeletrônicas de maneira mais direta.
+
+\begin{figure}[ht]
+  \centering
+  \includesvg[width=0.68\textwidth]{GaAs_full.svg}  % Substitua "nome_do_arquivo" pelo nome do seu arquivo de imagem
+  \caption{Medidas de sinal THz do GaAs no domínio do tempo. Também são exibidos a transmitância, diferença de fase e as propriedades ópticas obtidas (Índice de refração e Coeficiente de absorção). }
+  \label{fig:1}
+\end{figure}
+
+Os dados obtidos para o GaAs não foram parecidos com os encontrados na literatura. Porém, considerando as reflexões (vide Figura 2), foi obtido um valor de índice de refração ($n$) mais próximo da literatura \cite{Nicolas2023, Grischkowsky1990}. A expressão que foi ajustada nos dados de transmissividade é mostrada na Eq. (\ref{eq:1}). Apesar das estimativas com as reflexões serem satisfatórias, espera-se realizar novas medidas para eliminar as suspeitas de erros sistemáticos.
+
+\begin{equation}
+    \widetilde{\tau}(\nu, n, k, d) = \frac{4(n+ik)}{(n+ik+1)^{2}} e^{2\pi i(n+ik-1)\nu d/c} \left[ 1 - \left(\frac{n+ik-1}{n+ik+1}\right) e^{4\pi i(n+ik)\nu d/c} \right]^{-1}
+    \label{eq:1}
+\end{equation}
+
+%%
+\begin{figure}[ht]
+  \centering
+  \includesvg[width=0.72\textwidth]{GaAs_reflex.svg}  % Substitua "nome_do_arquivo" pelo nome do seu arquivo de imagem
+  \caption{Medidas de transmissividade THz do GaAs. A Figura apresenta o ajuste simultâneo das partes real e imaginária, os parâmetros obtidos para índice de refração, coeficiente de extinção e espessura foram, respectivamente; $n$ = 3.611(3), $k$ = 0.0018(4) e $d$ = 0.4201(4).}
+  \label{fig:2}
+\end{figure}
+%%
+
+A segunda porção de amostras são filmes finos de Bi2Te3 (Telureto de bismuto), as medidas foram feitas com diferentes espessuras de filme. O objetivo era obter curvas de permissividade a temperatura ambiente e verificar alguma mudança. Os resultados não demonstraram mudanças significativas, ainda é necessário utilizar alguns modelos físicos conhecidos para, através dos dados de permissividade, obter as propriedades ópticas. 
+
+\begin{figure}[ht]
+  \centering
+  \includesvg[width=0.68\textwidth]{BiTe_full.svg}  % Substitua "nome_do_arquivo" pelo nome do seu arquivo de imagem
+  \caption{Medidas do sinal THz do Bi2Te3 com diferentes espessuras. A Figura apresenta as partes real e imaginária da permissividade.}
+  \label{fig:3}
+\end{figure}
+
+Os resultados ainda estão sob análise, pois podem acusar erros. Após obter dados mais confiáveis de permissividade, será feito um ajuste para estimar parâmetros de transporte pela expressão análoga à Eq. (\ref{eq:2}) \cite{Fox2010, Kawahala2023}. Logo, como não foi observado fônons, o ajuste será feito utilizando o modelo convencional de Drude descrito na Eq. (\ref{eq:3}), que é uma expressão reduzida da formulação (\ref{eq:2}). A Figura 3 mostra os resultados obtidos para o Bi2Te3.
+
+\begin{equation}
+    \widetilde{\epsilon} = \epsilon_{\infty} + (\epsilon_{st} - \epsilon_{\infty})\frac{\nu_{LO}^{2}}{\nu_{LO}^{2} - \nu^{2} - i\nu \Gamma_{TO}} - \frac{\nu_{p}^{2}}{\nu^{2} + i\nu \gamma}
+    \label{eq:2}
+\end{equation}
+
+\begin{equation}
+    \widetilde{\epsilon} = \epsilon_{\infty} - \frac{\nu_{p}^{2}}{\nu^{2} + i\nu \gamma}
+    \label{eq:3}
+\end{equation}
+
+Além dessas duas amostras, existem análises de outras três, sendo elas; Safira (substrato), ZnO (Óxido de Zinco) e Silício. Os dados da safira foram obtidos através da elipsometria, pois segundo a literatura, a Safira possui birrefringência ao THz \cite{Lee2009}. Os resultados do Silício não trazem novidade, a amostra possui transparência ao THz e os métodos foram os mesmos utilizados para o GaAs, logo, falta comparar os resultados com a referência.
+
+As análises do ZnO foram incompatíveis com a realidade, gerando transmitâncias acima de 100\%. Uma das suspeitas foi a birrefringência da safira, essa hipótese motivou o estudo da safira para verificar a causalidade do problema. A Figura 4 mostra os resultados da elipsometria da Safira para a componente horizontal da polarização.
+
+\begin{figure}[ht]
+  \centering
+  \includesvg[width=0.68\textwidth]{Safira_horiz.svg}  % Substitua "nome_do_arquivo" pelo nome do seu arquivo de imagem
+  \caption{Medidas de elipsometria em THz da Safira com diferentes espessuras. A Figura apresenta dados da Safira rotacionada de 0º a 360º com passos de 20º.}
+  \label{fig:4}
+\end{figure}
+
+Além dos dados das amostras de materiais semicondutores e isolantes topológicos, também foram feitas análises com dos pulsos transmitidos por diferentes aberturas e com diferentes tensões na antena de emissão. Os dados das aberturas foram apresentados nos porters citados, já os dados da antena serão estudados mais a frente para obter outros parâmetros como densidade de portadores e resistividade. A Figura 5 mostra as amplitudes dos sinais detectados quando altera-se a tensão nas bias durante a emissão de THz.
+
+\begin{figure}[ht]
+  \centering
+  \includesvg[width=0.68\textwidth]{antenas_p.svg}  % Substitua "nome_do_arquivo" pelo nome do seu arquivo de imagem
+  \caption{Medidas do sinal THz com diferentes tensões na antena de emissão. A Figura apresenta um ganho considerável na amplitude do sinal para 30 Volts.}
+  \label{fig:5}
+\end{figure}
+
+Por fim, as análises das aberturas e os coeficientes ópticos a partir das FFTs dos sinais transmitidos. A Figura 6 mostra como os furos podem afetar na radiação transmitida, tanto na amplitude quanto fase. Nesse aspecto, o modelo utilizado para estimar o $n$, bem como $\alpha$, supõe um \textit{bulk} de espessura e forma igual as aberturas, ou seja, cilindros de ar. 
+
+Observa-se que $n$ se aproxima de 1 e que a transmitância para baixas frequências diminui consideravelmente, a causa disso é que o comprimento de onda para baixas frequências está próximo do limite de difração, logo, efeitos de borda são mais aparentes e a radiação se espalha.
+
+\begin{figure}[ht]
+  \centering
+  \includesvg[width=0.68\textwidth]{furos_full.svg}  % Substitua "nome_do_arquivo" pelo nome do seu arquivo de imagem
+  \caption{Medidas do sinal THz para diferentes aberturas do porta-amostras (diâmetros de 0 à 5 milímetros). A medida de referência é dada pelo sinal sem a presença dos furos.}
+  \label{fig:6}
+\end{figure}
+
+\section{Considerações finais}
+\qquad Tendo em vista dois semestres de experiencias acadêmicas, nota-se que muitas atividades foram realizadas em prol do amadurecimento pessoal dentro do ambiente universitário e laboratorial. Isso contribuiu para o aprendizado de metodologias que serão reincidentes durante toda o projeto, dessa forma, aperfeiçoamentos de novos modelos, materiais e métodos poderão ocorrer em tempo hábil. Evidentemente, isso só foi possível graças aos esforços da equipe e coordenador do projeto, que possibilitou visitas técnicas, idas a eventos e reuniões interessantes que fomentam futuras parcerias.
+
+\subsection{Plano de atividades}
+\qquad Os estudos previstos constituem um plano de trabalho moderno na fronteira da área de espectroscopia em materiais quânticos, que terá certamente um considerável impacto científico. Outro ponto forte do projeto é seu enquadramento harmonioso com as linhas de pesquisas em andamento no Instituto de Física da USP. 
+
+Pelas razões expostas, a realização dos experimentos descritos pode beneficiar enormemente os grupos de pesquisa em termos de estender as pesquisas além dos semicondutores tradicionais e de expandir as pesquisas atuais para níveis competitivos internacionalmente. Portanto, visto que a aplicação do THz-TDS é ampla \cite{Leitenstorfer2023}, espera-se que futuros investimentos tornem viável o estudo de novos tipos de amostras.
+
+Dentre os planos mais concretos, o estudo de amostras de PbSnTe exibem um panorama otimista. Sua exposição à condições físicas extremas pode apresentar uma formação de fônons ópticos promissora. Nesse viés, um dos objetivos principais será a escrita de uma dissertação que resulte em uma ou mais publicações em periódicos. Além disso, espera-se que mais atividades durante o último ano permita minha participação em eventos com apresentações orais ou não.  
+
+\clearpage
+
+% Referências
+\printbibliography
+
+\end{document}

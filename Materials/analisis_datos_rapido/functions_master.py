@@ -160,6 +160,9 @@ def agrupar_por_rango_temperatura(archivos_por_temp, rangos):
     
     return archivos_por_rango
 
+def FourierT2(f,N):
+    return np.conj(sp.fft.fft(f.values,n=N))
+
 def generar_rangos(min_temp, max_temp, paso):
     rangos = []
     if paso == 0:
@@ -169,16 +172,13 @@ def generar_rangos(min_temp, max_temp, paso):
             rangos.append((i, i + paso))
         return rangos
 
-def FourierT2(f,N):
-    return np.conj(sp.fft.fft(f.values,n=N))
-
-
-def convert_dats(carpeta, N):
+# Función para procesar archivos .dat
+def convert_dats(carpeta,N):
     nueva_carpeta = os.path.join(carpeta, 'carpeta1')
     os.makedirs(nueva_carpeta, exist_ok=True)
     
     archivos = [archivo for archivo in os.listdir(carpeta) if archivo.endswith('.dat')]
-    
+    print(archivos)
     # Agrupar archivos por temperatura
     archivos_por_temp = {}
     temperaturas = []
@@ -192,7 +192,7 @@ def convert_dats(carpeta, N):
     if not temperaturas:
         print("No se encontraron temperaturas en los archivos.")
         return
-
+    
     archivos_por_temp = dict(sorted(archivos_por_temp.items()))
     #FIN AGRUPACION ARCHIVOS POR TEMP
     
@@ -205,11 +205,12 @@ def convert_dats(carpeta, N):
     if rangos_temperatura is None:
         archivos_por_rango = archivos_por_temp
     else: 
-        # Agrupar archivos por rango de temperatura
+    # Agrupar archivos por rango de temperatura
         archivos_por_rango = agrupar_por_rango_temperatura(archivos_por_temp, rangos_temperatura)
+
+
     # Procesar archivos por cada temperatura
     for rango, lista_archivos in archivos_por_rango.items():
-        mean_temp = None  # Inicializar la variable antes del try
         try:
             # Inicializar variables de acumulación
             suma_col1 = None
@@ -222,6 +223,7 @@ def convert_dats(carpeta, N):
             for archivo in lista_archivos:
                 temps_arch.append(extraer_temperatura(archivo))
                 df = pd.read_csv(os.path.join(carpeta, archivo), delim_whitespace=True)
+                
                 # Acumular las columnas
                 if suma_col1 is None:
                     suma_col1 = df['pos']
@@ -231,22 +233,19 @@ def convert_dats(carpeta, N):
                     suma_col2 += df['X']
             
             # Calcular el promedio
-            promedio_col1 = suma_col1 / n_archivos #* (2/c)
+            promedio_col1 = suma_col1 / n_archivos * (2/c)
             promedio_col2 = suma_col2 / n_archivos
             
             # Crear un DataFrame con los promedios
             df_promedio = pd.DataFrame({'pos': promedio_col1, 'X': promedio_col2})
             mean_temp = (max(temps_arch)+min(temps_arch))/2
-            
             # Guardar el archivo resultante en la nueva carpeta
             archivo_salida = os.path.join(nueva_carpeta, f'Average_{round(mean_temp,2)}K.dat')
             df_promedio.to_csv(archivo_salida, index=False, sep=' ')
             print(f"Archivo {archivo_salida} generado en {nueva_carpeta}.")
 
         except Exception as e:
-            # Usar un mensaje genérico si mean_temp no está definido
-            temp_msg = round(mean_temp, 2) if mean_temp is not None else "desconocida"
-            print(f"Error al procesar los archivos con temperatura {temp_msg}: {e}")
+            print(f"Error al procesar los archivos con temperatura {round(mean_temp,2)}: {e}")
 
 
 def getFilterdata(path_signal,right,left):
@@ -264,12 +263,11 @@ def getSignal(path_signal,right,left):
     return df1['X']
 
 def getSignalWindowed(path_signal, 
-                      path_ref, 
-                      left, 
-                      right_signal,
-                        right_subs, 
-                        params_window=None,
-                        zeros_to_add = 2**12):
+                     path_ref, 
+                     left, 
+                     right_signal,
+                     right_subs, 
+                     params_window=None):
     '''
     Alinea la señal al máximo del substrato y aplica una ventana centrada en ese máximo.
 
@@ -296,19 +294,9 @@ def getSignalWindowed(path_signal,
     '''
     y = getSignal(path_signal, right_signal, left)
     y_substrate = getSignal(path_ref, right_subs, left)
-
+    # print(f"Señal: {len(y)} puntos, Substrato: {len(y_substrate)} puntos")
     y = np.asarray(y)
     y_substrate = np.asarray(y_substrate)
-
-    if not params_window:
-        return y, y_substrate
-
-    # Asegurar mismos tamaños
-    len_diff = len(y) - len(y_substrate)
-    if len_diff > 0:
-        y_substrate = np.pad(y_substrate, (0, len_diff), 'constant')
-    elif len_diff < 0:
-        y = np.pad(y, (0, -len_diff), 'constant')
 
     # Encontrar máximos
     idx_max_y = np.argmax(y)
@@ -316,20 +304,48 @@ def getSignalWindowed(path_signal,
 
     # Desplazar y para alinear su máximo al del substrato
     desplazamiento = idx_max_subs - idx_max_y
+    
+    # Función para balancear puntos izquierda/derecha del máximo
+    def balance_signal(signal):
+        idx_max = np.argmax(signal)
+        left_points = idx_max  # Puntos desde inicio hasta máximo
+        right_points = len(signal) - idx_max - 1  # Puntos desde máximo hasta final
+        
+        # Si hay más puntos a la derecha, rellenar con ceros a la izquierda
+        if right_points > left_points:
+            pad_size = right_points - left_points
+            signal = np.pad(signal, (pad_size, 0), 'constant')
+        
+        return signal
+
+    # Balancear ambas señales individualmente
+    y = balance_signal(y)
+    y_substrate = balance_signal(y_substrate)
+    
+
+    if not params_window:
+        return y, y_substrate
+
+    # Asegurar mismos tamaños (por si hay diferencias residuales)
+    len_diff = len(y) - len(y_substrate)
+    if len_diff > 0:
+        y_substrate = np.pad(y_substrate, (len_diff, 0), 'constant')
+    elif len_diff < 0:
+        y = np.pad(y, (-len_diff, 0), 'constant')
+
+    # # Encontrar máximos
+    # idx_max_y = np.argmax(y)
+    idx_max_subs = np.argmax(y_substrate)
+
+    # # Desplazar y para alinear su máximo al del substrato
+    # desplazamiento = idx_max_subs - idx_max_y
+    
     y_alineada = np.roll(y, desplazamiento)
 
     # Aplicar ventana
     params_window_copia = list(params_window)
-    params_window_copia.insert(1, len(y))  # insertar tamaño de la señal
+    params_window_copia.insert(1, len(y_substrate))  # insertar tamaño de la señal
     ventana = apply_window(params_window_copia)
-
-    # Añadir 64 ceros a la izquierda de las señales
-    zeros_to_add = 2**12
-    y_alineada = np.pad(y_alineada, (zeros_to_add, 0), 'constant')
-    y_substrate = np.pad(y_substrate, (zeros_to_add, 0), 'constant')
-    
-    # Actualizar posición del máximo del substrato (ahora desplazado por los ceros añadidos)
-    idx_max_subs += zeros_to_add
 
     # Desplazar ventana para que su máximo coincida con el máximo común
     idx_max_ventana = np.argmax(ventana)
