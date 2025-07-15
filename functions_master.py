@@ -262,6 +262,7 @@ def getSignal(path_signal,right,left):
     df1 = df1.loc[(df1.iloc[:, 0] >= left) & (df1.iloc[:, 0] <=right)]
     return df1['X']
 
+
 def getSignalWindowed(path_signal, 
                      path_ref, 
                      left, 
@@ -315,6 +316,10 @@ def getSignalWindowed(path_signal,
         if right_points > left_points:
             pad_size = right_points - left_points
             signal = np.pad(signal, (pad_size, 0), 'constant')
+        else:
+            pad_size = abs(right_points - left_points)
+            signal = np.pad(signal, (0, pad_size), 'constant')
+
         
         return signal
 
@@ -322,7 +327,6 @@ def getSignalWindowed(path_signal,
     y = balance_signal(y)
     y_substrate = balance_signal(y_substrate)
     
-
     if not params_window:
         return y, y_substrate
 
@@ -354,6 +358,78 @@ def getSignalWindowed(path_signal,
 
     return desplazamiento, y_alineada, y_substrate, ventana_alineada
     
+def getSignalWindowed2(path_signal, 
+                     left, 
+                     right_signal,
+                     params_window=None):
+    '''
+    Alinea la señal al máximo del substrato y aplica una ventana centrada en ese máximo.
+
+    Parameters
+    ----------
+    path_signal : str
+        Ruta del archivo con la señal.
+    path_ref : str
+        Ruta del archivo con el substrato.
+    left : float
+        Límite izquierdo para la señal.
+    right_signal : float
+        Límite derecho de la señal.
+    right_subs : float
+        Límite derecho del substrato.
+    params_window : list, optional
+        Parámetros para aplicar la ventana. Si es None o vacío, no se aplica ventana.
+
+    Returns
+    -------
+    tuple
+        Si no hay ventana: (y, y_substrate)
+        Si hay ventana: (desplazamiento, y_alineada, y_substrate, ventana_alineada)
+    '''
+    y = getSignal(path_signal, right_signal, left)
+    # print(f"Señal: {len(y)} puntos, Substrato: {len(y_substrate)} puntos")
+    y = np.asarray(y)
+
+    # Encontrar máximos
+    idx_max_y = np.argmax(y)
+
+    
+    # Función para balancear puntos izquierda/derecha del máximo
+    def balance_signal(signal):
+        idx_max = np.argmax(signal)
+        left_points = idx_max  # Puntos desde inicio hasta máximo
+        right_points = len(signal) - idx_max - 1  # Puntos desde máximo hasta final
+        
+        # Si hay más puntos a la derecha, rellenar con ceros a la izquierda
+        if right_points > left_points:
+            pad_size = right_points - left_points
+            signal = np.pad(signal, (pad_size, 0), 'constant')
+        else:
+            pad_size = abs(right_points - left_points)
+            signal = np.pad(signal, (0, pad_size), 'constant')
+ 
+        return signal
+
+    # Balancear ambas señales individualmente
+    y = balance_signal(y)
+
+    if not params_window:
+        return y
+
+    # # Desplazar y para alinear su máximo al del substrato
+    # desplazamiento = idx_max_subs - idx_max_y
+
+    # Aplicar ventana
+    params_window_copia = list(params_window)
+    params_window_copia.insert(1, len(y))  # insertar tamaño de la señal
+    ventana = apply_window(params_window_copia)
+
+    # Desplazar ventana para que su máximo coincida con el máximo común
+    idx_max_ventana = np.argmax(ventana)
+    desp_ventana = idx_max_y - idx_max_ventana
+    ventana_alineada = np.roll(ventana, desp_ventana)
+
+    return desp_ventana, y, ventana_alineada
 
 def trans_model(nu,b,a,x0,gamma):
 
