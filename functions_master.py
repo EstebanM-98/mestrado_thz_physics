@@ -330,12 +330,12 @@ def getSignalWindowed(path_signal,
     if not params_window:
         return y, y_substrate
 
-    # Asegurar mismos tamaños (por si hay diferencias residuales)
-    len_diff = len(y) - len(y_substrate)
-    if len_diff > 0:
-        y_substrate = np.pad(y_substrate, (len_diff, 0), 'constant')
-    elif len_diff < 0:
-        y = np.pad(y, (-len_diff, 0), 'constant')
+    # # Asegurar mismos tamaños (por si hay diferencias residuales)
+    # len_diff = len(y) - len(y_substrate)
+    # if len_diff > 0:
+    #     y_substrate = np.pad(y_substrate, (len_diff, 0), 'constant')
+    # elif len_diff < 0:
+    #     y = np.pad(y, (-len_diff, 0), 'constant')
 
     # # Encontrar máximos
     # idx_max_y = np.argmax(y)
