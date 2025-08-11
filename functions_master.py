@@ -113,6 +113,212 @@ def create_frequency_frame(
 
     return ax1.lines + ax2.lines
 
+def plot_windowed_frequency_samples(
+    # datos y funciones (requeridos)
+    archivos_dat_samp,
+    archivos_dat_ref,
+    getFilterdata,          # callable(path, right, left) -> (x, y)
+    extraer_temperatura,    # callable(path) -> float|None
+    FourierT2,              # callable(serie_pd, N) -> np.array FFT
+    # recortes en tiempo
+    left=None,
+    right_sample=None,
+    right_subs=None,
+    # FFT / frecuencia
+    N=2**13,
+    fs=30.0,                # Hz para sp.fft.fftfreq
+    k_trunc=15,             # recorte de altas: nu = nu[1:len(nu)//k_trunc]
+    freq_xlim=(0.25, 1.0),  # ventana (THz) para mostrar/buscar mínimos
+    # figura 1 (|T|^2 vs nu)
+    figsize_fft=(5, 5),
+    dpi_fft=200,
+    cmap=cm.coolwarm,
+    show_colorbar=True,
+    cbar_pos=(0.88, 0.15, 0.02, 0.7),
+    cbar_label='Temperature (K)',
+    # mínimos a buscar
+    min1_range=(0.25, 0.40),   # rango THz del 1er mínimo
+    min2_range=(0.50, 1.00),   # rango THz del 2do mínimo
+    # offsets/estética (por si quieres apilar señales en el tiempo más adelante)
+    val_offset_signal=0.8,
+    val_offset_kappa=0.03,
+    # figura 2 (resúmenes vs temperatura)
+    figsize_summary=(14, 8),
+    dpi_summary=200,
+    tn_line=None,              # e.g., 23.5 para dibujar T_N; None para ocultar
+    tn_label=r"$T_N$",
+    # etiquetas
+    y_label_fft=r"$|T|^{2}$",
+    x_label_fft=r"$\nu$ (THz)",
+    y_label_min1="Transmittance Minimum",
+    y_label_min2="Amplitude Minimum",
+    x_label_temp="Temperature (K)",
+    params_window1 = ['nuttall']
+    
+):
+    """
+    Grafica |T|^2(ν) por archivo (coloreado por temperatura) y extrae dos mínimos en
+    rangos configurables, luego grafica frecuencia y amplitud de esos mínimos vs temperatura.
+
+    Devuelve un dict con: temps, max1_freqs, max1_values, max2_freqs, max2_values.
+    """
+
+    # --- temperaturas válidas (en el mismo orden que los archivos) ---
+    temps = [extraer_temperatura(p) for p in archivos_dat_samp if extraer_temperatura(p) is not None][::-1]
+    if not temps:
+        raise ValueError("No se encontraron temperaturas válidas en los archivos")
+
+    vmin, vmax = min(temps), max(temps)
+    norm = Normalize(vmin=vmin, vmax=vmax)
+
+    # --- Figura 1: |T|^2 (THz) para todas las muestras ---
+    fig1, ax_fft = plt.subplots(1, 1, figsize=figsize_fft, dpi=dpi_fft)
+    ax_fft.set_xlabel(x_label_fft)
+    ax_fft.set_ylabel(y_label_fft)
+
+    if show_colorbar:
+        fig1.subplots_adjust(right=0.85)
+        cbar_ax = fig1.add_axes(cbar_pos)
+        sm = cm.ScalarMappable(norm=norm, cmap=cmap)
+        fig1.colorbar(sm, cax=cbar_ax, label=cbar_label)
+
+    # resultados
+    max1_freqs, max1_values = [], []
+    max2_freqs, max2_values = [], []
+
+    # recorremos en el mismo orden (invertido como tu original)
+    for index, path_signal in enumerate(archivos_dat_samp[::-1]):
+        temp = temps[index]
+        color = cmap(norm(temp)) if temp is not None else 'blue'
+        path_ref = archivos_dat_ref[0]
+
+        # recortes temporales (right primero, luego left — como tu función)
+        phase, y_signal_ventaneada, y_substrate_padding, ventana = getSignalWindowed(
+        path_signal, path_ref, left, right_sample, right_subs, params_window1)
+
+        y_subs_ventana = pd.Series(y_substrate_padding * ventana)
+        y_signal_ventaneada = pd.Series(y_signal_ventaneada * ventana)
+
+
+        # FFT y kappa
+        k = 15
+        nu = sp.fft.fftfreq(N, 1 / 30)
+        fft_y_signal_ventaneada = FourierT2(y_signal_ventaneada, N)[1:len(nu)//k]
+        fft_y_subs_ventaneada = FourierT2(y_subs_ventana, N)[1:len(nu)//k]
+
+        nu = nu[1:len(nu)//k]
+        xmin, xmax = 0.25, 1.0
+        mask = (nu >= xmin) & (nu <= xmax)
+
+        fft_y_signal_ventaneada = fft_y_signal_ventaneada[mask]
+        fft_y_subs_ventaneada = fft_y_subs_ventaneada[mask]
+        nu_f = nu[mask]
+
+        val_offset_kappa = 0.8
+        offset_kappa = val_offset_kappa * index
+        
+        T = np.abs(fft_y_signal_ventaneada)**2/np.max(np.abs(fft_y_signal_ventaneada)**2)
+        
+        ax_fft.plot(nu_f, T, color=color)
+        ax_fft.set_yscale('log')
+
+        # mínimos en rangos configurables
+        # 1er mínimo
+        r1_min, r1_max = min1_range
+        mask1 = (nu_f >= r1_min) & (nu_f <= r1_max)
+        if np.any(mask1):
+            idx1 = np.argmin(T[mask1])
+            max1_freq = nu_f[mask1][idx1]
+            max1_val  = T[mask1][idx1]
+            ax_fft.scatter(max1_freq, max1_val, color='black', edgecolors=color, s=50, zorder=5)
+        else:
+            max1_freq, max1_val = np.nan, np.nan
+
+        # 2do mínimo
+        r2_min, r2_max = min2_range
+        mask2 = (nu_f >= r2_min) & (nu_f <= r2_max)
+        if np.any(mask2):
+            idx2 = np.argmin(T[mask2])
+            max2_freq = nu_f[mask2][idx2]
+            max2_val  = T[mask2][idx2]
+            ax_fft.scatter(max2_freq, max2_val, color='black', edgecolors=color, s=50, zorder=5)
+        else:
+            max2_freq, max2_val = np.nan, np.nan
+
+        max1_freqs.append(max1_freq)
+        max1_values.append(max1_val)
+        max2_freqs.append(max2_freq)
+        max2_values.append(max2_val)
+
+    ax_fft.set_yscale('log')
+    # trazas guía (opcionales)
+    ax_fft.plot(max1_freqs, max1_values, 'k--', linewidth=1, alpha=0.5)
+    ax_fft.plot(max2_freqs, max2_values, 'k--', linewidth=1, alpha=0.5)
+    ax_fft.legend(loc='best')
+
+    # --- Figura 2: resúmenes vs temperatura ---
+    # === Dos filas, cada una con doble eje y ===
+    fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=figsize_summary, dpi=dpi_summary, sharex=True)
+
+    temps_plot = temps[::-1]
+    ckw = dict(c=temps_plot, cmap='coolwarm', edgecolors='k', s=80, zorder=3)
+
+    # -------- Fila 1: primer mínimo --------
+    ax1 = ax_top
+    ax1.scatter(temps_plot, max1_freqs[::-1], **ckw, label='First Frequency Min.')
+    ax1.plot(temps_plot, max1_freqs[::-1], 'k--', alpha=0.3, linewidth=1)
+    ax1.set_ylabel('First Frequency Min. (THz)')
+
+    ax1b = ax1.twinx()
+    ax1b.scatter(temps_plot, max1_values[::-1], **ckw, marker='s', label=y_label_min1)
+    ax1b.plot(temps_plot, max1_values[::-1], 'k:', alpha=0.3, linewidth=1)
+    ax1b.set_yscale('log')
+    ax1b.set_ylabel(y_label_min1)
+
+    if tn_line is not None:
+        ax1.axvline(x=tn_line, color='gray', linestyle='--', linewidth=1.5, alpha=0.8)
+        ax1b.axvline(x=tn_line, color='gray', linestyle='--', linewidth=1.5, alpha=0.8)
+
+    # Combinar leyendas de ambos ejes (fila 1)
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax1b.get_legend_handles_labels()
+    ax1.legend(h1 + h2, l1 + l2, loc='upper right', fontsize='small')
+
+    # -------- Fila 2: segundo mínimo --------
+    ax3 = ax_bottom
+    ax3.scatter(temps_plot, max2_freqs[::-1], **ckw, label='Second Frequency Min.')
+    ax3.plot(temps_plot, max2_freqs[::-1], 'k--', alpha=0.3, linewidth=1)
+    ax3.set_ylabel('Second Frequency Min. (THz)')
+    ax3.set_xlabel(x_label_temp)
+
+    ax3b = ax3.twinx()
+    ax3b.scatter(temps_plot, max2_values[::-1], **ckw, marker='s', label=y_label_min2)
+    ax3b.plot(temps_plot, max2_values[::-1], 'k:', alpha=0.3, linewidth=1)
+    ax3b.set_yscale('log')
+    ax3b.set_ylabel(y_label_min2)
+
+    if tn_line is not None:
+        ax3.axvline(x=tn_line, color='gray', linestyle='--', linewidth=1.5, alpha=0.8)
+        ax3b.axvline(x=tn_line, color='gray', linestyle='--', linewidth=1.5, alpha=0.8)
+
+    # Combinar leyendas de ambos ejes (fila 2)
+    h3, l3 = ax3.get_legend_handles_labels()
+    h4, l4 = ax3b.get_legend_handles_labels()
+    ax3.legend(h3 + h4, l3 + l4, loc='lower left', fontsize='small')
+
+    plt.tight_layout()
+
+    return {
+        "temps": temps,
+        "min1_freqs": max1_freqs,
+        "min1_vals": max1_values,
+        "min2_freqs": max2_freqs,
+        "min2_vals": max2_values,
+        "fig_fft": fig1,
+        "fig_summary": fig,
+    }
+
+
 def plot_frequency_samples(
     # datos y funciones (requeridos)
     archivos_dat_samp,
@@ -770,12 +976,7 @@ def generar_rangos(min_temp, max_temp, paso):
             rangos.append((i, i + paso))
         return rangos
 
-import numpy as np
-import pandas as pd
-import scipy as sp
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from ipywidgets import FloatSlider, Button, HBox, VBox, HTML, interactive_output
+
 
 def make_anim_widget(
     archivos_dat_samp,
@@ -966,6 +1167,309 @@ def make_anim_widget(
     sliders = dict(left=left_slider, right_sample=rs_slider, right_subs=rr_slider, index=idx_slider)
     return ui, sliders
 
+
+def make_anim_window(
+    # --- datos y funciones requeridas ---
+    archivos_dat_samp,
+    archivos_dat_ref,
+    getSignalWindowed,      # callable(path_signal, path_ref, left, right_sample, right_subs, params_window1) -> (phase, y_signal_vent, y_subs_pad, ventana)
+    FourierT2,              # callable(serie_pd, N) -> FFT (array-like)
+    extraer_temperatura,    # callable(path_str) -> float | None
+
+    # --- parámetros “quemados” ahora configurables ---
+    N=2**15,
+    fs=30.0,                # para sp.fft.fftfreq
+    k_trunc=15,             # truncar altas: nu = nu[1:len(nu)//k_trunc]
+    freq_window=(0.25, 1.0),
+    figsize=(10, 8),
+    dpi=200,
+    offset_val=2.0,         # desplazamiento en el trazo de la muestra en tiempo
+    yscale_fft='log',       # 'linear' o 'log'
+    show_title=True,
+
+    # ventana (lo que antes era ['gaussian', desv])
+    params_window=['blackman'],
+
+    # --- rangos de sliders (min, max, default, step) ---
+    left_range=(320.0, 423.0, 392.5, 0.1),
+    right_sample_range=(380.0, 450.0, 424.1, 0.1),
+    right_subs_range=(380.0, 450.0, 433.4, 0.1),
+    index_default=0,   # se ajusta internamente al [0, len(archivos_dat_samp)-1]
+    desv_range=(0.0, 1000.0, 150.0, 0.001),
+    d_range=(0.01, 1.0, 0.627, 0.01),
+    # global variables
+    # --- guardado de selección ---
+    save_globals=True,
+    var_names=('nw0','nw1','nw2'),   # nombres para left, right_sample, right_subs
+    on_save=None,                 # callback opcional: on_save(dict(left=..., right_sample=..., right_subs=...))
+        # --- NUEVO destino de escritura ---
+    write_to="user_ns",           # "user_ns" | "module" | "custom"
+    custom_ns=None,               # dict si write_to="custom"
+):
+    """
+    Crea y muestra un widget interactivo equivalente a tu 'anim3', pero parametrizable.
+
+    Retorna (ui, sliders) para poder leer los valores desde Python si lo necesitas:
+        sliders['left'].value, sliders['right_sample'].value, ...
+    """
+
+    # ---- sliders ----
+    opc = dict(continuous_update=False, readout_format=".3f")
+    left_slider        = FloatSlider(min=left_range[0],  max=left_range[1],  value=left_range[2],  step=left_range[3],  description='left', **opc)
+    right_samp_slider  = FloatSlider(min=right_sample_range[0], max=right_sample_range[1], value=right_sample_range[2], step=right_sample_range[3], description='right_sample', **opc)
+    right_subs_slider  = FloatSlider(min=right_subs_range[0],   max=right_subs_range[1],   value=right_subs_range[2],   step=right_subs_range[3], description='right_subs', **opc)
+    idx_slider         = FloatSlider(min=0, max=max(0, len(archivos_dat_samp)-1), value=index_default, step=1, description='index', **opc)
+    desv_slider        = FloatSlider(min=desv_range[0], max=desv_range[1], value=desv_range[2], step=desv_range[3], description='desv', **opc)
+    d_slider           = FloatSlider(min=d_range[0],    max=d_range[1],    value=d_range[2],    step=d_range[3],    description='d', **opc)
+
+    status = HTML(value="")
+    btn_save = Button(description="Guardar selección", button_style='success', icon='save')
+
+    # ---- función de dibujo: misma lógica que tu anim3, pero usando args ----
+    def _anim3(left, right_sample, right_subs, index, desv, d):
+        right_ref = right_subs
+
+        f = plt.figure(figsize=figsize, dpi=dpi)
+        gs = gridspec.GridSpec(1, 2)
+
+        ax1 = plt.subplot(gs[0, 0])  # temporal
+        ax2 = plt.subplot(gs[0, 1])  # FFT
+        # ax3 = plt.subplot(gs[1, :])  # (reservado por si quieres algo extra luego)
+
+        # archivos
+        idx = int(index)
+        idx = max(0, min(idx, len(archivos_dat_samp)-1))
+        path_signal = archivos_dat_samp[idx]
+        path_ref = archivos_dat_ref[0]
+
+        # ventana/filtrado
+        # Mantengo tu interfaz: params_window1 = ['gaussian', desv]
+        # Si quieres usar 'd' también en tu getSignalWindowed, pásalo aquí:
+        params_window1 = params_window
+
+        phase, y_signal_ventaneada, y_substrate_padding, ventana = getSignalWindowed(
+            path_signal, path_ref, left, right_sample, right_ref, params_window1
+        )
+
+        # series
+        y_subs_ventana = pd.Series(y_substrate_padding * ventana)
+        y_signal_vent = pd.Series(y_signal_ventaneada * ventana)
+
+        # --- subplot 1: dominio temporal ---
+        ax1.plot(y_subs_ventana / (np.max((y_subs_ventana)) or 1.0), 'r', label='Ref')
+        ax1.plot(ventana / (np.max(np.abs(ventana)) or 1.0), 'k--', label='Window')
+        ax1.plot(y_signal_vent / (np.max((y_signal_vent)) or 1.0) + offset_val, 'b',
+                 label=f'Sam+{extraer_temperatura(str(path_signal))} K')
+        ax1.plot(ventana / (np.max(np.abs(ventana)) or 1.0) + offset_val, 'k--')
+        ax1.legend(loc='lower right')
+
+        # --- frecuencias ---
+        nu = sp.fft.fftfreq(N, d=1.0/fs)
+        nu = nu[1:len(nu)//k_trunc]
+
+        fft_y_signal = FourierT2(y_signal_vent, N)[1:len(nu)+1]
+        fft_y_subs   = FourierT2(y_subs_ventana, N)[1:len(nu)+1]
+
+        xmin, xmax = freq_window
+        mask = (nu >= xmin) & (nu <= xmax)
+        nu_f = nu[mask]
+        fft_s = fft_y_signal[mask]
+        fft_r = fft_y_subs[mask]
+
+        # --- subplot 2: FFTs normalizadas ---
+        ax2.plot(nu_f, np.abs(fft_s)**2 / (np.max(np.abs(fft_s)**2) or 1.0), 'b', label='Sample FFT')
+        ax2.plot(nu_f, np.abs(fft_r)**2 / (np.max(np.abs(fft_r)**2) or 1.0), 'r', label='Reference FFT')
+        if show_title:
+            ax2.set_title("Frequency Domain")
+        ax2.set_ylabel(r"$|FFT|^{2}$")
+        ax2.set_xlabel(r"$\nu$ (THz)")
+        if yscale_fft:
+            ax2.set_yscale(yscale_fft)
+        ax2.legend()
+
+        plt.tight_layout()
+        status.value = f"<b>idx:</b> {idx} | <b>left:</b> {left:.3f} | <b>right_samp:</b> {right_sample:.3f} | <b>right_subs:</b> {right_subs:.3f} | <b>desv:</b> {desv:.3f} | <b>d:</b> {d:.3f}"
+
+    # conectar sliders -> figura
+    out = interactive_output(
+        _anim3,
+        dict(
+            left=left_slider,
+            right_sample=right_samp_slider,
+            right_subs=right_subs_slider,
+            index=idx_slider,
+            desv=desv_slider,
+            d=d_slider
+        )
+    )
+
+    # -------- lógica de guardado --------
+    def _write_values(vals):
+        # decide destino
+        if write_to == "user_ns":
+            try:
+                from IPython import get_ipython
+                ip = get_ipython()
+            except Exception:
+                ip = None
+            if ip is not None and hasattr(ip, "user_ns"):
+                ip.user_ns[var_names[0]] = vals['left']
+                ip.user_ns[var_names[1]] = vals['right_sample']
+                ip.user_ns[var_names[2]] = vals['right_subs']
+                return True
+            # si no hay IPython, cae al módulo
+        if write_to == "custom" and isinstance(custom_ns, dict):
+            custom_ns[var_names[0]] = vals['left']
+            custom_ns[var_names[1]] = vals['right_sample']
+            custom_ns[var_names[2]] = vals['right_subs']
+            return True
+
+        # por defecto escribe en el módulo (functions_master)
+        globals()[var_names[0]] = vals['left']
+        globals()[var_names[1]] = vals['right_sample']
+        globals()[var_names[2]] = vals['right_subs']
+        return False  # indicó que fue al módulo
+
+    def _on_save(_):
+        vals = dict(
+            left=left_slider.value,
+            right_sample=right_samp_slider.value,
+            right_subs=right_subs_slider.value
+        )
+        wrote_to_user_ns = False
+        if save_globals and isinstance(var_names, (tuple, list)) and len(var_names) == 3:
+            wrote_to_user_ns = _write_values(vals)
+        if callable(on_save):
+            on_save(vals)
+        destino = "notebook (user_ns)" if wrote_to_user_ns else ("custom_ns" if write_to=="custom" else "módulo")
+        status.value = f"<b>Guardado en {destino}:</b> {vals}"
+
+    btn_save.on_click(_on_save)
+
+    ui = VBox([
+        HBox([left_slider, right_samp_slider, right_subs_slider, idx_slider]),
+        HBox([btn_save, status]),
+        status,
+        out
+    ])
+
+    display(ui)
+    sliders = dict(
+        left=left_slider,
+        right_sample=right_samp_slider,
+        right_subs=right_subs_slider,
+        index=idx_slider,
+        desv=desv_slider,
+        d=d_slider
+    )
+    return ui, sliders
+
+def plot_all_windowed_samples(
+    left,
+    right_sample,
+    right_ref,
+    archivos_dat_samp,
+    archivos_dat_ref,
+    figsize=(8, 4),
+    dpi=200,
+    cmap=cm.coolwarm,
+    offset_factor=0.3,         # factor de desplazamiento vertical
+    field_label="Normalized field + offset",
+    xlabel="Time (arb. u.)",
+    title="Transmitted field",
+    colorbar_label="Temperature (K)",
+    invert_order=True,          # invertir el orden de los archivos
+    params_window1 = ['nuttall']
+):
+    """
+    Dibuja todas las señales procesadas con desplazamiento y coloreadas por temperatura.
+
+    Parámetros
+    ----------
+    left : float
+        Parámetro 'left' para getFilterdata.
+    right_sample : float
+        Parámetro 'right_sample' para getFilterdata.
+    archivos_dat_samp : list[str]
+        Lista de rutas de archivos .dat de las muestras.
+    getFilterdata : callable
+        Función para obtener (x, y) desde un archivo y parámetros.
+    extraer_temperatura : callable
+        Función que devuelve la temperatura desde el nombre del archivo.
+    figsize : tuple, opcional
+        Tamaño de la figura.
+    dpi : int, opcional
+        Resolución en DPI de la figura.
+    cmap : matplotlib colormap, opcional
+        Mapa de colores para la temperatura.
+    offset_factor : float, opcional
+        Multiplicador para el desplazamiento vertical entre trazas.
+    field_label : str, opcional
+        Etiqueta del eje Y.
+    xlabel : str, opcional
+        Etiqueta del eje X.
+    title : str, opcional
+        Título de la gráfica.
+    colorbar_label : str, opcional
+        Etiqueta de la barra de colores.
+    invert_order : bool, opcional
+        Si True, invierte el orden de los archivos y temperaturas.
+    """
+
+    # Extraer temperaturas válidas
+    temps = [extraer_temperatura(p) for p in archivos_dat_samp if extraer_temperatura(p) is not None]
+    if not temps:
+        raise ValueError("No se encontraron temperaturas válidas en los archivos")
+
+    if invert_order:
+        temps = temps[::-1]
+        archivos_dat_samp_plot = archivos_dat_samp[::-1]
+    else:
+        archivos_dat_samp_plot = archivos_dat_samp
+
+    # Configuración de colores según temperatura
+    min_temp, max_temp = min(temps), max(temps)
+    norm = Normalize(vmin=min_temp, vmax=max_temp)
+
+    # Crear figura
+    fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+    ax1.set_ylabel(field_label)
+    ax1.set_xlabel(xlabel)
+    ax1.set_title(title)
+
+    val = 0  # desplazamiento acumulado
+    for index, path_signal in enumerate(archivos_dat_samp_plot):
+        temp = temps[index]
+        color = cmap(norm(temp)) if temp is not None else 'blue'
+
+        path_signal = path_signal
+        path_ref = archivos_dat_ref[0]
+
+        # Obtener datos filtrados
+        phase, y_signal_ventaneada, y_substrate_padding, ventana = getSignalWindowed(
+            path_signal, path_ref, left, right_sample, right_ref, params_window1
+        )
+
+
+        y_signal_vent = pd.Series(y_signal_ventaneada * ventana)
+
+        # --- subplot 1: dominio temporal ---
+        
+        ax1.plot(y_signal_vent,color=color)
+        # ax1.plot(ventana / (np.max(np.abs(ventana)) or 1.0) + offset_val, 'k--')
+        # ax1.legend(loc='lower right')
+
+        # Graficar señal desplazada
+        # ax1.plot(x, y + val, color=color)
+        # val += offset_factor * max(y)  # incremento desplazamiento
+    # ax1.plot(ventana / (np.max(np.abs(ventana)) or 1.0),'k')
+    # Barra de color lateral
+    fig.subplots_adjust(right=0.85)
+    cbar_ax = fig.add_axes([0.88, 0.15, 0.02, 0.7])
+    sm = cm.ScalarMappable(norm=norm, cmap=cmap)
+    fig.colorbar(sm, cax=cbar_ax, label=colorbar_label)
+
+    plt.show()
 
 
 def preparar_y_procesar(
@@ -1209,19 +1713,19 @@ def getSignalWindowed(path_signal,
     if not params_window:
         return y, y_substrate
 
-    # # Asegurar mismos tamaños (por si hay diferencias residuales)
-    # len_diff = len(y) - len(y_substrate)
-    # if len_diff > 0:
-    #     y_substrate = np.pad(y_substrate, (len_diff, 0), 'constant')
-    # elif len_diff < 0:
-    #     y = np.pad(y, (-len_diff, 0), 'constant')
+    # Asegurar mismos tamaños (por si hay diferencias residuales)
+    len_diff = len(y) - len(y_substrate)
+    if len_diff > 0:
+        y_substrate = np.pad(y_substrate, (len_diff, 0), 'constant')
+    elif len_diff < 0:
+        y = np.pad(y, (-len_diff, 0), 'constant')
 
     # # Encontrar máximos
-    # idx_max_y = np.argmax(y)
+    idx_max_y = np.argmax(y)
     idx_max_subs = np.argmax(y_substrate)
 
     # # Desplazar y para alinear su máximo al del substrato
-    # desplazamiento = idx_max_subs - idx_max_y
+    desplazamiento = idx_max_subs - idx_max_y
     
     y_alineada = np.roll(y, desplazamiento)
 
