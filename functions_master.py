@@ -1474,7 +1474,7 @@ def plot_all_windowed_samples(
 
 def preparar_y_procesar(
     sample: int = 6,
-    base_dir: str | None = None,
+    base_dir: str  = None,
     project_rel: str = os.path.join("EuZn2P2", "src"),
     out_subdir: str = "carpeta1",
     pattern: str = "*.dat",
